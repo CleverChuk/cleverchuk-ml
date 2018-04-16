@@ -17,8 +17,8 @@ class TestNaiveBayes(unittest.TestCase):
         path = os.path.join("training.csv")
         with open(path) as fd:
             subjects = dict(csv.reader(fd, delimiter=","))
-            features = subjects.keys()
-            classes = subjects.values()
+            features = list(subjects.keys())
+            classes = list(subjects.values())
             self.nb.train(features, classes)
 
     def test_naivebayes_1(self):

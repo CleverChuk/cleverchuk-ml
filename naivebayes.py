@@ -35,10 +35,10 @@ class NaiveBayes(object):
         """
             utility method
         """
-        words = map(str.lower, nltk.word_tokenize(text))
-        for w in words: # n^2
-            if len(w) < 3:
-                words.pop(words.index(w)) 
+        words = []        
+        for w in map(str.lower, nltk.word_tokenize(text)): # n
+            if len(w) > 2: # only consider words of 3 or more as features
+                words.append(w)
 
         return words
 
@@ -62,7 +62,11 @@ class NaiveBayes(object):
         # validate data type
         if not all(type(item) is str for item in feature_arr) and \
             not all(type(item) is str for item in class_arr):
-            raise ValueError("must be array of strings")
+            raise ValueError("must be a list of strings")
+        
+        if not type(feature_arr) is list and not type(class_arr) is list:
+            raise TypeError("feature_arr and class_arr must be lists")
+
 
         for i in range(len(feature_arr)): # n^3
             words = self.listWords(feature_arr[i])
@@ -96,14 +100,14 @@ class NaiveBayes(object):
         _class = None
         prob_f = 0
 
-        for c in self.classes.keys(): # n^2
+        for c in iter(self.classes.keys()): # n^2
             # calculate P(C)
             prob_c = self.classes[c]/float(sum(self.classes.values()))  # P(C)
             prob_total = prob_c
 
             for w in words:
                 if w in self.features:
-                    # calculate P(W and C)
+                    # calculate P(W)
                     prob_w = self.features[w][c] / float(self.total_words)
                     prob_cond = prob_w/prob_c  # P(W|C)
                     prob = prob_cond*prob_w/prob_c  # P(C|W)
