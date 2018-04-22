@@ -24,12 +24,21 @@ class Counter(dict):
 
 class NaiveBayes(object):
     def __init__(self, *args, **kwargs):
-        self.features = None
-        self.classes = None
-        self.total_words = None
+        self._features = None
+        self._classes = None
+        self._total_words = None
 
     def __str__(self):
         return "Cleverchuk's Simple Naive Bayes Classifier"
+
+    def getFeature(self):
+        return self._features
+    
+    def getClasses(self):
+        return self._classes
+
+    def getTotalWords(self):
+        return self._total_words
 
     def listWords(self, text):
         """
@@ -50,9 +59,9 @@ class NaiveBayes(object):
             this method is used to created a virtual contingency table used to 
             calculate the probabilities for the Bayes theorem
         """
-        self.features = {}  # a dictionary representing the contingency table
-        self.classes = Counter()  # a dictionary for keeping count of class
-        self.total_words = 0
+        self._features = {}  # a dictionary representing the contingency table
+        self._classes = Counter()  # a dictionary for keeping count of class
+        self._total_words = 0
 
         # validate data size
         if len(feature_arr) != len(class_arr):
@@ -72,24 +81,24 @@ class NaiveBayes(object):
             words = self.listWords(feature_arr[i])
 
             # frequency of class
-            if class_arr[i] not in self.classes:
-                self.classes[class_arr[i]] = 1
+            if class_arr[i] not in self._classes:
+                self._classes[class_arr[i]] = 1
             else:
-                self.classes[class_arr[i]] += 1
+                self._classes[class_arr[i]] += 1
 
             # aggregate word occurrence in each class
             for word in words:
-                if word not in self.features:
+                if word not in self._features:
                     counter = {}
                     for c in class_arr:
                         counter[c] = 0
 
-                    self.features[word] = counter
-                    self.total_words += 1  # aggregates the total observations in the table
+                    self._features[word] = counter
+                    self._total_words += 1  # aggregates the total observations in the table
 
-                self.features[word][class_arr[i]] += 1
+                self._features[word][class_arr[i]] += 1
 
-        return (self.features, self.classes, self.total_words)
+        return (self._features, self._classes, self._total_words)
 
     def classify(self, sentence):
         """
@@ -100,17 +109,18 @@ class NaiveBayes(object):
         _class = None
         prob_f = 0
 
-        for c in iter(self.classes.keys()): # n^2
+        for c in iter(self._classes.keys()): # n^2
             # calculate P(C)
-            prob_c = self.classes[c]/float(sum(self.classes.values()))  # P(C)
+            prob_c = self._classes[c]/float(sum(self._classes.values()))  # P(C)
             prob_total = prob_c
 
             for w in words:
-                if w in self.features:
-                    # calculate P(W)
-                    prob_w = self.features[w][c] / float(self.total_words)
-                    prob_cond = prob_w/prob_c  # P(W|C)
-                    prob = prob_cond*prob_w/prob_c  # P(C|W)
+                if w in self._features:
+                    
+                    prob_w = sum(self._features[w].values()) / float(self._total_words) # P(W)
+                    prob_wnc = self._features[w][c] / float(self._total_words) # P(W and C)
+                    prob_cond = prob_wnc / prob_w # P(C|W)  
+                    prob = prob_cond*prob_w/prob_c  # P(W|C)
                     prob_total *= prob
 
                     if prob_f < prob_total:
